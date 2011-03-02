@@ -31,7 +31,7 @@ def main():
     for mp3 in mp3s:
         tags = ID3(mp3)
         # Skip already analyzed files
-        if 'TBPM' in tags and 'TKEY' in tags:
+        if not options.replace and 'TBPM' in tags and 'TKEY' in tags:
             continue
 
         echosong = audio.LocalAudioFile(mp3)
