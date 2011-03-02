@@ -13,6 +13,32 @@ import echonest.audio as audio
 sys.path.append('wulib')
 from wulib import rwalk
 
+# Not sure if this is "music theory" correct, but I'm pretty sure this is what
+# the mapping is according to Echo Nest Remix.
+keymap = {
+    0:  'C',
+    1:  'C#',
+    2:  'D',
+    3:  'D#',
+    4:  'E',
+    5:  'F',
+    6:  'F#',
+    7:  'G',
+    8:  'G#',
+    9:  'A',
+    10: 'A#',
+    11: 'B'
+}
+
+modemap = {
+    0:  'm',
+    1:  ''
+}
+
+def key(echosong):
+    return u'%s%s' % (keymap[echosong.analysis.key['value']],
+                      modemap[echosong.analysis.mode['value']])
+
 def main():
     """main function for standalone usage"""
     usage = "usage: %prog [options] dir"
@@ -38,7 +64,11 @@ def main():
         if options.replace or 'TBPM' not in tags:
             tags.add(TBPM(encoding=1, text=unicode(round(echosong.analysis.tempo['value']))))
         if options.replace or 'TKEY' not in tags:
-            tags.add(TKEY(encoding=1, text=unicode(echosong.analysis.key['value'])))
+            try:
+                tags.add(TKEY(encoding=1, text=key(echosong)))
+            except KeyError:
+                sys.stderr.write('Incorrect key info; key: %d, mode: %d\n' %
+                        (echosong.analysis.key['value'], echosong.analysis.mode['value']))
 
         tags.save()
 
