@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 #
-# Perform Echo Nest Remix analysis on a folder
-# of files if they are missing BPM and key tags.
+# Calls Echo Nest Remix API to analyze all mp3 files in a directory. This
+# modifies the ID3 tags to include bpm/key information. Full analysis results
+# are stored in a "shelve database" and a key to the results are stored in the
+# ID3 tags as well.
+#
+# Author: Yacin Nadji <yacin@gatech.edu>
 #
 
 import sys
