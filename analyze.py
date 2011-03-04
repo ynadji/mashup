@@ -48,7 +48,7 @@ def run((mp3, options)):
     if not options.replace and 'TBPM' in tags and 'TKEY' in tags:
         return
 
-    echosong = audio.LocalAudioFile(mp3)
+    echosong = audio.LocalAnalysis(mp3)
     if options.replace or 'TBPM' not in tags:
         tags.add(TBPM(encoding=1, text=unicode(round(echosong.analysis.tempo['value']))))
     if options.replace or 'TKEY' not in tags:
