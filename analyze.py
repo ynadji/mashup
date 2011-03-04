@@ -8,8 +8,9 @@ import sys
 from optparse import OptionParser
 from multiprocessing import Pool, cpu_count
 from itertools import repeat, izip
+import shelve
 
-from mutagen.id3 import ID3, TKEY, TBPM
+from mutagen.id3 import ID3, TKEY, TBPM, TXXX
 from mutagen.easyid3 import EasyID3
 import echonest.audio as audio
 
@@ -46,7 +47,7 @@ def run((mp3, options)):
     tags = ID3(mp3)
     # Skip already analyzed files
     if not options.replace and 'TBPM' in tags and 'TKEY' in tags:
-        return
+        return (None, None)
 
     echosong = audio.LocalAnalysis(mp3)
     if options.replace or 'TBPM' not in tags:
@@ -58,26 +59,48 @@ def run((mp3, options)):
             sys.stderr.write('Incorrect key info; key: %d, mode: %d\n' %
                     (echosong.analysis.key['value'], echosong.analysis.mode['value']))
 
-    tags.save()
+    return (echosong, tags)
 
 def main(argv):
     """main function for standalone usage"""
-    usage = "usage: %prog [options] dir"
+    usage = "usage: %prog [options] dir dbfile"
     parser = OptionParser(usage=usage)
     parser.add_option('-r', '--replace', help='Replace existing BPM/key ID3 tags',
             default=False, action='store_true')
 
     (options, args) = parser.parse_args(argv)
 
-    if len(args) != 1:
+    if len(args) != 2:
         parser.print_help()
         return 2
 
     # do stuff
     mp3s = rwalk(args[0], '*.mp3')
     p = Pool(cpu_count())
-    p.map(run, izip(mp3s, repeat(options)), 100)
+    it = p.imap_unordered(run, izip(mp3s, repeat(options)), 100)
 
+    # Initialize shelve db. Check for existing 'maxkey'.
+    db = shelve.open(args[1])
+    try:
+        idx = unicode(int(db['maxkey']) + 1)
+    except KeyError:
+        idx = u'0'
+
+    for echosong, tags in it:
+        try:
+            # Create ID and insert into db
+            tags.add(TXXX(encoding=3, desc=u'mashupid', text=idx))
+            tags.save()
+
+            db[idx] = echosong
+            idx = unicode(int(idx) + 1)
+        except AttributeError: # When we hit an already analyzed file
+            pass
+
+    # Update 'maxkey'.
+    db['maxkey'] = idx
+
+    db.close()
     print('Done!')
 
 if __name__ == '__main__':
