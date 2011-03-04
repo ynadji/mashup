@@ -6,8 +6,6 @@
 
 import sys
 from optparse import OptionParser
-from multiprocessing import Pool, cpu_count
-from itertools import repeat, izip
 import shelve
 
 from mutagen.id3 import ID3, TKEY, TBPM, TXXX
@@ -43,24 +41,6 @@ def key(echosong):
     return u'%s%s' % (keymap[echosong.analysis.key['value']],
                       modemap[echosong.analysis.mode['value']])
 
-def run((mp3, options)):
-    tags = ID3(mp3)
-    # Skip already analyzed files
-    if not options.replace and 'TBPM' in tags and 'TKEY' in tags:
-        return (None, None)
-
-    echosong = audio.LocalAnalysis(mp3)
-    if options.replace or 'TBPM' not in tags:
-        tags.add(TBPM(encoding=1, text=unicode(round(echosong.analysis.tempo['value']))))
-    if options.replace or 'TKEY' not in tags:
-        try:
-            tags.add(TKEY(encoding=1, text=key(echosong)))
-        except KeyError:
-            sys.stderr.write('Incorrect key info; key: %d, mode: %d\n' %
-                    (echosong.analysis.key['value'], echosong.analysis.mode['value']))
-
-    return (echosong, tags)
-
 def main(argv):
     """main function for standalone usage"""
     usage = "usage: %prog [options] dir dbfile"
@@ -76,26 +56,36 @@ def main(argv):
 
     # do stuff
     mp3s = rwalk(args[0], '*.mp3')
-    p = Pool(cpu_count())
-    it = p.imap_unordered(run, izip(mp3s, repeat(options)), 100)
 
     # Initialize shelve db. Check for existing 'maxkey'.
     db = shelve.open(args[1])
     try:
-        idx = unicode(int(db['maxkey']) + 1)
+        idx = db['maxkey']
     except KeyError:
         idx = u'0'
 
-    for echosong, tags in it:
-        try:
-            # Create ID and insert into db
-            tags.add(TXXX(encoding=3, desc=u'mashupid', text=idx))
-            tags.save()
+    for mp3 in mp3s:
+        tags = ID3(mp3)
+        # Skip already analyzed files
+        if not options.replace and 'TXXX:mashupid' in tags:
+            continue
 
-            db[idx] = echosong
-            idx = unicode(int(idx) + 1)
-        except AttributeError: # When we hit an already analyzed file
-            pass
+        echosong = audio.LocalAnalysis(mp3)
+        if options.replace or 'TBPM' not in tags:
+            tags.add(TBPM(encoding=1, text=unicode(round(echosong.analysis.tempo['value']))))
+        if options.replace or 'TKEY' not in tags:
+            try:
+                tags.add(TKEY(encoding=1, text=key(echosong)))
+            except KeyError:
+                sys.stderr.write('Incorrect key info; key: %d, mode: %d\n' %
+                        (echosong.analysis.key['value'], echosong.analysis.mode['value']))
+
+        # Create ID and insert into db
+        tags.add(TXXX(encoding=3, desc=u'mashupid', text=idx))
+        tags.save()
+
+        db[idx] = echosong
+        idx = unicode(int(idx) + 1)
 
     # Update 'maxkey'.
     db['maxkey'] = idx
