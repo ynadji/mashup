@@ -7,6 +7,8 @@
 import sys
 from optparse import OptionParser
 import shelve
+from time import sleep
+from random import randint
 
 from mutagen.id3 import ID3, TKEY, TBPM, TXXX
 from mutagen.easyid3 import EasyID3
@@ -86,6 +88,10 @@ def main(argv):
 
         db[idx] = echosong
         idx = unicode(int(idx) + 1)
+
+        # So we don't hammer their servers
+        print('Finished analyzing %s, sleeping...' % mp3)
+        sleep(randint(0, 3))
 
     # Update 'maxkey'.
     db['maxkey'] = idx
