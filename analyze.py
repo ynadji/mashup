@@ -17,6 +17,7 @@ from random import randint
 from mutagen.id3 import ID3, TKEY, TBPM, TXXX
 from mutagen.easyid3 import EasyID3
 import echonest.audio as audio
+from pyechonest.track import track_from_id
 
 sys.path.append('wulib')
 from wulib import rwalk
@@ -77,6 +78,7 @@ def main(argv):
             continue
 
         echosong = audio.LocalAnalysis(mp3)
+        moreinfo = track_from_id(echosong.analysis.identifier)
         if options.replace or 'TBPM' not in tags:
             tags.add(TBPM(encoding=1, text=unicode(round(echosong.analysis.tempo['value']))))
         if options.replace or 'TKEY' not in tags:
@@ -85,6 +87,10 @@ def main(argv):
             except KeyError:
                 sys.stderr.write('Incorrect key info; key: %d, mode: %d\n' %
                         (echosong.analysis.key['value'], echosong.analysis.mode['value']))
+
+        tags.add(TXXX(encoding=3, desc=u'danceability', text=unicode(moreinfo.danceability)))
+        tags.add(TXXX(encoding=3, desc=u'energy', text=unicode(moreinfo.energy)))
+        tags.add(TXXX(encoding=3, desc=u'loudness', text=unicode(moreinfo.loudness)))
 
         # Create ID and insert into db
         tags.add(TXXX(encoding=3, desc=u'mashupid', text=idx))
