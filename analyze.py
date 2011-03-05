@@ -22,6 +22,11 @@ from pyechonest.track import track_from_id
 sys.path.append('wulib')
 from wulib import rwalk
 
+# Colors yay!
+RED = '\033[91m'
+GREEN = '\033[92m'
+ENDC = '\033[0m'
+
 # Not sure if this is "music theory" correct, but I'm pretty sure this is what
 # the mapping is according to Echo Nest Remix.
 keymap = {
@@ -85,8 +90,8 @@ def main(argv):
         try:
             tags.add(TKEY(encoding=1, text=key(echosong)))
         except KeyError:
-            sys.stderr.write('Incorrect key info; key: %d, mode: %d\n' %
-                    (echosong.analysis.key['value'], echosong.analysis.mode['value']))
+            sys.stderr.write('%sIncorrect key info; key: %d, mode: %d%s\n' %
+                    (RED, echosong.analysis.key['value'], echosong.analysis.mode['value'], ENDC))
         tags.add(TXXX(encoding=3, desc=u'danceability', text=unicode(moreinfo.danceability)))
         tags.add(TXXX(encoding=3, desc=u'energy', text=unicode(moreinfo.energy)))
         tags.add(TXXX(encoding=3, desc=u'loudness', text=unicode(moreinfo.loudness)))
@@ -102,7 +107,7 @@ def main(argv):
         tags.save()
 
         # So we don't hammer their servers
-        print('Finished analyzing %s, sleeping...' % mp3)
+        print('%sFinished analyzing %s, sleeping...%s' % (GREEN, mp3, ENDC))
         sleep(randint(0, 3))
 
     # Update 'maxkey'.
