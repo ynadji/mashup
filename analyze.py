@@ -79,15 +79,14 @@ def main(argv):
 
         echosong = audio.LocalAnalysis(mp3)
         moreinfo = track_from_id(echosong.analysis.identifier)
-        if options.replace or 'TBPM' not in tags:
-            tags.add(TBPM(encoding=1, text=unicode(round(echosong.analysis.tempo['value']))))
-        if options.replace or 'TKEY' not in tags:
-            try:
-                tags.add(TKEY(encoding=1, text=key(echosong)))
-            except KeyError:
-                sys.stderr.write('Incorrect key info; key: %d, mode: %d\n' %
-                        (echosong.analysis.key['value'], echosong.analysis.mode['value']))
 
+        # Add main tags
+        tags.add(TBPM(encoding=1, text=unicode(round(echosong.analysis.tempo['value']))))
+        try:
+            tags.add(TKEY(encoding=1, text=key(echosong)))
+        except KeyError:
+            sys.stderr.write('Incorrect key info; key: %d, mode: %d\n' %
+                    (echosong.analysis.key['value'], echosong.analysis.mode['value']))
         tags.add(TXXX(encoding=3, desc=u'danceability', text=unicode(moreinfo.danceability)))
         tags.add(TXXX(encoding=3, desc=u'energy', text=unicode(moreinfo.energy)))
         tags.add(TXXX(encoding=3, desc=u'loudness', text=unicode(moreinfo.loudness)))
