@@ -91,12 +91,15 @@ def main(argv):
         tags.add(TXXX(encoding=3, desc=u'energy', text=unicode(moreinfo.energy)))
         tags.add(TXXX(encoding=3, desc=u'loudness', text=unicode(moreinfo.loudness)))
 
-        # Create ID and insert into db
-        tags.add(TXXX(encoding=3, desc=u'mashupid', text=idx))
-        tags.save()
+        # Update entry in DB if it exists, or...
+        if 'TXXX:mashupid' in tags:
+            db[tags.get('TXXX:mashupid').text[0]] = echosong
+        else: # create a new entry
+            tags.add(TXXX(encoding=3, desc=u'mashupid', text=idx))
+            db[idx] = echosong
+            idx = unicode(int(idx) + 1)
 
-        db[idx] = echosong
-        idx = unicode(int(idx) + 1)
+        tags.save()
 
         # So we don't hammer their servers
         print('Finished analyzing %s, sleeping...' % mp3)
