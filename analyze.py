@@ -83,8 +83,7 @@ def main(argv):
     for mp3 in mp3s:
         tags = ID3(mp3)
         # Skip already analyzed files
-        if not options.replace and 'TXXX:mashupid' in tags:
-            continue
+        if not options.replace and 'TXXX:mashupid' in tags: continue
         # Skip big files
         if os.path.getsize(mp3) > MAXSIZE: continue
 
