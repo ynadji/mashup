@@ -9,6 +9,7 @@
 #
 
 import sys
+import os
 from optparse import OptionParser
 import shelve
 from time import sleep
@@ -22,6 +23,8 @@ from pyechonest.track import track_from_id
 
 sys.path.append('wulib')
 from wulib import rwalk, retry
+
+MAXSIZE = 31457280 # 30 MB
 
 # Colors yay!
 RED = '\033[91m'
@@ -82,6 +85,8 @@ def main(argv):
         # Skip already analyzed files
         if not options.replace and 'TXXX:mashupid' in tags:
             continue
+        # Skip big files
+        if os.path.getsize(mp3) > MAXSIZE: continue
 
         echosong = retry(audio.LocalAnalysis, [mp3], (socket.error,), sleep=30)
         moreinfo = track_from_id(echosong.analysis.identifier)
