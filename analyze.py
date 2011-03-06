@@ -13,6 +13,7 @@ from optparse import OptionParser
 import shelve
 from time import sleep
 from random import randint
+import socket
 
 from mutagen.id3 import ID3, TKEY, TBPM, TXXX
 from mutagen.easyid3 import EasyID3
@@ -20,7 +21,7 @@ import echonest.audio as audio
 from pyechonest.track import track_from_id
 
 sys.path.append('wulib')
-from wulib import rwalk
+from wulib import rwalk, retry
 
 # Colors yay!
 RED = '\033[91m'
@@ -82,7 +83,7 @@ def main(argv):
         if not options.replace and 'TXXX:mashupid' in tags:
             continue
 
-        echosong = audio.LocalAnalysis(mp3)
+        echosong = retry(audio.LocalAnalysis, [mp3], (socket.error,), sleep=30)
         moreinfo = track_from_id(echosong.analysis.identifier)
 
         # Add main tags
