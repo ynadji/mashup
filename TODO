@@ -1,3 +1,5 @@
 = Analyze =
 * The upper limit for filesize seems to be somewhere closer to 17MB rather than 30MB.
 See: /Users/ynadji/Music/iTunes/iTunes Music/Alexo/Euphoria EP (2009 Rework)/Deck A - Jason Grey Remix.mp3
+* mutagen.id3.ID3NoHeaderError: '/Users/ynadji/Music/iTunes/iTunes Music/Crookers/Suicide Sundays - Week 19 - earmilk.com/Boxer (feat. nic sarno).mp3' doesn't start with an ID3 tag on
+call to ID3 constructor. Fix this!
