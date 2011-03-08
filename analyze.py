@@ -15,6 +15,7 @@ import shelve
 from time import sleep
 from random import randint
 import socket
+import urllib2
 
 from mutagen.id3 import ID3, TKEY, TBPM, TXXX
 from mutagen.easyid3 import EasyID3
@@ -99,7 +100,8 @@ def main(argv):
                 # smarter, say a specialized exception: AnalysisPendingException, etc.
                 sys.stderr.write('%sSong analysis failed, skipping %s%s\n' % (RED, mp3, ENDC))
                 continue
-            moreinfo = track_from_id(echosong.analysis.identifier)
+            moreinfo = retry(track_from_id, [echosong.analysis.identifier],
+                    (urllib2.URLError,), sleep=30)
 
             # Add main tags
             tags.add(TBPM(encoding=1, text=unicode(round(echosong.analysis.tempo['value']))))
