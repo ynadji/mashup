@@ -17,7 +17,7 @@ from random import randint
 import socket
 import urllib2
 
-from mutagen.id3 import ID3, TKEY, TBPM, TXXX
+from mutagen.id3 import ID3, TKEY, TBPM, TXXX, ID3NoHeaderError
 from mutagen.easyid3 import EasyID3
 import echonest.audio as audio
 from pyechonest.track import track_from_id
@@ -85,7 +85,10 @@ def main(argv):
 
     try:
         for mp3 in mp3s:
-            tags = ID3(mp3)
+            try:
+                tags = ID3(mp3)
+            except ID3NoHeaderError:
+                tags = ID3()
             # Skip already analyzed files
             if not options.replace and 'TXXX:mashupid' in tags: continue
             # Skip big files
@@ -122,7 +125,7 @@ def main(argv):
                 db[idx] = echosong
                 idx = unicode(int(idx) + 1)
 
-            tags.save()
+            tags.save(mp3)
 
             # So we don't hammer their servers
             print('%sFinished analyzing %s, sleeping...%s' % (GREEN, mp3, ENDC))
