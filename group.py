@@ -50,10 +50,28 @@ def gettag(tags, tagname):
     try:             return tags[tagname][0]
     except KeyError: return ''
 
+def artist(query):
+    """Interactive search function. Search by artist."""
+    pass
+
+def title(query):
+    """Interactive search function. Search by title."""
+    pass
+
+def bpm(query):
+    """Interactive search function. Search by bpm."""
+    pass
+
+def interact(interactlocals):
+    import IPython.ipapi
+    IPython.ipapi.launch_new_instance(interactlocals)
+
 def main(argv):
     """main function for standalone usage"""
     usage = "usage: %prog [options] dir"
     parser = OptionParser(usage=usage)
+    parser.add_option('-f', '--full', default=False, action='store_true',
+                      help='Dump ALL groups')
 
     (options, args) = parser.parse_args(argv)
 
@@ -78,13 +96,16 @@ def main(argv):
                                         gettag(easytags, 'genre')))
 
     bpmgroups = sorted(bpms.keys())
-    for bpm in bpmgroups:
-        print('BPM: %d\n' % bpm)
-        for path, artist, title, genre in bpms[bpm]:
-            print('File: %s' % path)
-            print('Artist: %s' % artist)
-            print('Title: %s' % title)
-            print('Genre: %s' % genre)
+    if options.full:
+        for bpm in bpmgroups:
+            print('BPM: %d\n' % bpm)
+            for path, artist, title, genre in bpms[bpm]:
+                print('File: %s' % path)
+                print('Artist: %s' % artist)
+                print('Title: %s' % title)
+                print('Genre: %s' % genre)
+    else:
+        interact()
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
